@@ -1,0 +1,29 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/rust
+{
+    "name": "ESP32 Rust with QEMU",
+    "privileged": true,
+    "build": {
+      "dockerfile": "../Dockerfile"
+    },
+    // Use 'mounts' to make the cargo cache persistent in a Docker Volume.
+    "mounts": [
+      {
+        "source": "devcontainer-cargo-cache-${devcontainerId}",
+        "target": "/usr/local/cargo",
+        "type": "volume"
+      }
+    ],
+    "customizations": {
+      "vscode": {
+        "extensions": [
+          "rust-lang.rust-analyzer",
+          "swellaby.vscode-rust-test-adapter",
+          "eamodio.gitlens",
+          "panicbit.cargo",
+          "ms-azuretools.vscode-docker",
+          "wokwi.wokwi-vscode"
+        ]
+      }
+    }
+}
