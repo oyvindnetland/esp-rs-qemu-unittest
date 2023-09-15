@@ -21,11 +21,18 @@ So, then I started to look at QEMU, which at least has the potential of nice com
 - .devcontainer.json that can be used by vscode to start a devcontainer (the rest of this readme will assume this is done, if the Dockerfile is used in another way or this is set up on host directly the results may vary).
 - Basic cargo/rust files for a esp32 project.
 - A main.rs file with a very simple application (main function) and a very simple unit test.
-- A qemu_application.sh script that will build and run the application in QEMU.
-- A qemu_unittest.sh script that will build and run the unit tests in QEMU.
+- A qemu.py script that can bulid and run in QEMU
 
-## Known issues
-- The bash scripts feels a bit clunky, but works for now. Might attempt to make it a `cargo qemu-test` command or something similar (but i don't really know how that works)
-- If the unit tests pass then the qemu command will not exit, just freeze (Ctrl-A X to exit). Hopefully this is possible to fix somehow (if unittest fails, the command will exit due to `-no-reboot`).
-- The output is currently a bit verbose, would be nice to get just the unit test output.
-- Will not work for testing drivers/hardware abstraction layers (maybe possible if used with https://github.com/dbrgn/embedded-hal-mock). Many would argue that this might not be the best use for unit tests, but would be nice to provide the possibility at some point.
+## qemu.py
+
+### Run app
+
+`./qemu.py app` will build and run the normal rust application in QEMU. The 
+example applicaiton in this project is very simple and works well in QEMU, but 
+more complicated applications that use the HW the ESP will probably work less well.
+
+`./qemu.py unittest` will build and run the rust unittest in QEMU. It will also
+exit QEMU when the test is done, so it could easily work in automated tests.
+
+`./qemu.py vscode` generates entries to task.json and launch.json which can be used 
+to debug unittests within vscode.
