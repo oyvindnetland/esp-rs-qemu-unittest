@@ -1,10 +1,13 @@
-FROM rust
+FROM espressif/idf-rust:all_1.71.0.1
 ARG USERNAME=esp
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
+USER root
+
 RUN apt update \
     && apt install -y libudev-dev \
+    sudo \
     python3 \
     python3-virtualenv \
     python3-pip \
@@ -13,7 +16,17 @@ RUN apt update \
     libgcrypt20-dev \
     ninja-build \
     flex \
-    bison
+    bison \
+    libglib2.0-dev \
+    libpixman-1-dev \
+    libcairo2-dev \
+    libpango1.0-dev \
+    libgif-dev \
+    procps \
+    htop
+
+RUN echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
 
 WORKDIR "/usr/local/src"
 RUN git clone https://github.com/espressif/qemu.git
@@ -27,26 +40,24 @@ RUN ../configure --target-list=xtensa-softmmu \
     --disable-sdl --disable-gtk
 RUN make
 
-# Create the user
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
-    #
-    # [Optional] Add sudo support. Omit if you don't need to install software after connecting.
-    && apt-get update \
-    && apt-get install -y sudo \
-    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
-    && chmod 0440 /etc/sudoers.d/$USERNAME
+# add to dialout group for serial port access
+RUN usermod --append --groups dialout $USERNAME
 
 USER $USERNAME
 
-RUN cargo install cargo-generate
-RUN cargo install ldproxy
-RUN cargo install espup
-RUN cargo install espflash
-RUN cargo install cargo-espflash
-RUN espup install --toolchain-version 1.69.0
-RUN . ~/export-esp.sh
+# re-install espflash and cargo-espflash since the supplied versions have library issues
+RUN cargo install espflash -f
+RUN cargo install cargo-espflash -f
 RUN rustup default esp
 
-RUN echo "source ~/export-esp.sh" >> ~/.bashrc
+# store bash history in a folder that can be mounted to the host
+RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=~/history/.bash_history" \
+    && mkdir /home/$USERNAME/history/ \
+    && touch /home/$USERNAME/history/.bash_history \
+    && chown -R $USERNAME /home/$USERNAME/history \ 
+    && echo "$SNIPPET" >> ~/.bashrc
+
+# makes sure the correct clang library is used for esp-rs
+RUN echo "export CLANG_LIB=$(find /home/${USERNAME} -name libclang.so)" >> ~/.bashrc
+
 ENV SHELL /bin/bash
