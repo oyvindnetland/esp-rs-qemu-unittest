@@ -1,0 +1,8 @@
+# Rust often needs a bit of an extra main task stack size compared to C (the default is 3K)
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=20000
+CONFIG_PTHREAD_TASK_STACK_SIZE_DEFAULT=20000
+
+# for qemu
+CONFIG_ETH_USE_OPENETH=y
+CONFIG_MBEDTLS_HARDWARE_AES=n
+CONFIG_MBEDTLS_HARDWARE_SHA=n
